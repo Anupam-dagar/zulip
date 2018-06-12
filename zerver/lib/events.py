@@ -45,7 +45,7 @@ from zerver.models import Client, Message, Realm, UserPresence, UserProfile, Cus
     get_user_profile_by_id, \
     get_realm_user_dicts, realm_filters_for_realm, get_user,\
     custom_profile_fields_for_realm, get_realm_domains, \
-    get_default_stream_groups, CustomProfileField, Stream
+    get_default_stream_groups, CustomProfileField, Stream, UserMessage
 from zproject.backends import email_auth_enabled, password_auth_enabled
 from version import ZULIP_VERSION
 
@@ -140,6 +140,12 @@ def fetch_initial_state_data(user_profile: UserProfile,
             state['max_message_id'] = messages[0].id
         else:
             state['max_message_id'] = -1
+
+    if want('starred_messages'):
+        starred_messages = UserMessage.objects.filter(user_profile=user_profile,
+                                                  flags=UserMessage.flags.starred)
+        if starred_messages:
+            state['starred_messages_id'] = [message_id.id for message_id in starred_messages]
 
     if want('muted_topics'):
         state['muted_topics'] = get_topic_mutes(user_profile)
@@ -384,6 +390,9 @@ def apply_event(state: Dict[str, Any],
                 for field in p:
                     if field in person:
                         p[field] = person[field]
+    
+    elif event['type'] == 'starred_messages':
+        state['starred_messages'] = event['starred_messages']
 
     elif event['type'] == 'realm_bot':
         if event['op'] == 'add':

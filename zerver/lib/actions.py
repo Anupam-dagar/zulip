@@ -443,6 +443,18 @@ def notify_created_user(user_profile: UserProfile) -> None:
                              is_bot=user_profile.is_bot))
     send_event(event, active_user_ids(user_profile.realm_id))
 
+def get_starred_messages(user_profile: UserProfile) -> None:
+    event = dict(type="starred_messages",
+                person=dict(email=user_profile.email,
+                             user_id=user_profile.id,
+                             is_admin=user_profile.is_realm_admin,
+                             full_name=user_profile.full_name,
+                             avatar_url=avatar_url(user_profile),
+                             timezone=user_profile.timezone,
+                             date_joined=user_profile.date_joined.isoformat(),
+                             is_bot=user_profile.is_bot))
+    send_event(event, active_user_ids(user_profile.realm_id))
+
 def created_bot_event(user_profile: UserProfile) -> Dict[str, Any]:
     def stream_name(stream: Optional[Stream]) -> Optional[str]:
         if not stream:
